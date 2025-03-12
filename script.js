@@ -5,6 +5,9 @@ const inventory = [
     { name: "Product C", price: 300, stock: 10 },
 ];
 
+let invoice = [];
+let invoiceNumber = 1001; // Starting invoice number
+
 // Display inventory
 function loadInventory() {
     const inventoryList = document.getElementById('inventory-list');
@@ -26,8 +29,6 @@ function loadInventory() {
 }
 
 // Billing functionality
-let invoice = [];
-
 function addItem() {
     const name = document.getElementById('item-name').value;
     const price = parseFloat(document.getElementById('item-price').value);
@@ -48,24 +49,30 @@ function addItemFromInventory(index) {
     updateInvoice();
 }
 
+// Invoice Calculation with Tax and Discount
 function updateInvoice() {
     const invoiceList = document.getElementById('invoice-list');
     const totalAmount = document.getElementById('total-amount');
+    const taxRate = parseFloat(document.getElementById('tax-rate').value) || 0;
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
 
     invoiceList.innerHTML = '';
-    let total = 0;
+    let subtotal = 0;
 
     invoice.forEach((item, index) => {
         const itemTotal = item.price * item.qty;
-        total += itemTotal;
+        subtotal += itemTotal;
 
         invoiceList.innerHTML += `<li>${item.name} - ${item.qty} x $${item.price} = $${itemTotal}</li>`;
     });
 
+    const taxAmount = (subtotal * taxRate) / 100;
+    const total = subtotal + taxAmount - discount;
+
     totalAmount.textContent = total.toFixed(2);
 }
 
-// Print functionality
+// Invoice Printing with Logo, Date, and Details
 function printInvoice() {
     const invoiceDetails = invoice.map(item =>
         `${item.name} - ${item.qty} x $${item.price} = $${item.qty * item.price}`
@@ -73,21 +80,32 @@ function printInvoice() {
 
     const totalAmount = invoice.reduce((sum, item) => sum + item.price * item.qty, 0);
 
+    const currentDate = new Date().toLocaleDateString();
+
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
         <html>
         <head>
-            <title>Invoice</title>
+            <title>Invoice #${invoiceNumber}</title>
         </head>
         <body>
-            <h1>Invoice</h1>
+            <div style="text-align: center;">
+                <img src="logo.png" alt="Company Logo" style="max-width: 100px;">
+                <h1>Your Company Name</h1>
+                <p>Invoice No: #${invoiceNumber}</p>
+                <p>Date: ${currentDate}</p>
+            </div>
+            <hr>
             <pre>${invoiceDetails}</pre>
+            <hr>
             <h3>Total: $${totalAmount.toFixed(2)}</h3>
         </body>
         </html>
     `);
     printWindow.document.close();
     printWindow.print();
+
+    invoiceNumber++; // Increment invoice number for the next bill
 }
 
 // Initialize inventory on page load
